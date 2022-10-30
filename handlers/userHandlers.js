@@ -51,10 +51,7 @@ handlers._user.post = (requestProperties, callback) => {
     typeof requestProperties.body.tosAgreement === "boolean"
       ? requestProperties.body.tosAgreement
       : false;
-  console.log(
-    requestProperties.body.tosAgreement.length,
-    typeof requestProperties.body.tosAgreement
-  );
+
   console.log("userObj =>", {
     firstName,
     lastName,
@@ -148,9 +145,11 @@ handlers._user.put = (requestProperties, callback) => {
       ? requestProperties.body.password
       : false;
 
+  // find user
   if (phone) {
     data.read("users", phone, (err, userJson) => {
       if (!err && userJson) {
+        // update user
         const user = jsonParse(userJson);
         if (firstName || lastName || password) {
           firstName ? (user.firstName = firstName) : 0;
@@ -188,6 +187,41 @@ handlers._user.put = (requestProperties, callback) => {
 };
 
 //Delete User
-handlers._user.delete = () => {};
+handlers._user.delete = (requestProperties, callback) => {
+  // check validation
+  const phone =
+    typeof requestProperties.queryStringObject.phone === "string" &&
+    requestProperties.queryStringObject.phone.trim().length === 10
+      ? requestProperties.queryStringObject.phone
+      : false;
+
+  if (phone) {
+    // checking phone number
+    data.read("users", phone, (err, userJson) => {
+      if (!err && userJson) {
+        data.delete("users", phone, (err) => {
+          if (!err) {
+            callback(200, {
+              message: "User deleted successfully.",
+            });
+          } else {
+            callback(500, {
+              error: "There was an error in server.",
+            });
+          }
+        });
+      } else {
+        callback(500, {
+          error: "User not exist or an error in server",
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      error:
+        "There was an error in your request query  (Invalid phone number).",
+    });
+  }
+};
 
 module.exports = handlers;
