@@ -17,10 +17,11 @@ handler.handleReqRes = (req, res) => {
   const parseUrl = url.parse(req.url, true);
   const path = parseUrl.pathname;
   const trimPath = path.replace(/^\/+|\/+$/g, "");
-  console.log("Hit path: ", trimPath);
   const method = req.method.toLowerCase();
   const queryStringObject = parseUrl.query;
   const headersObject = req.headers;
+  console.log(req.url);
+  console.log(`Request API ==> (${method}) ${req.url}`);
   const requestProperties = {
     parseUrl,
     path,
