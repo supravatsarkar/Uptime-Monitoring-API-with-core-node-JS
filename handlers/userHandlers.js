@@ -25,6 +25,7 @@ handlers.userHandlers = (requestProperties, callback) => {
 };
 
 handlers._user = {};
+// Register user
 handlers._user.post = (requestProperties, callback) => {
   const firstName =
     typeof requestProperties.body.firstName === "string" &&
@@ -73,7 +74,7 @@ handlers._user.post = (requestProperties, callback) => {
         };
         data.create("users", phone, userObj, (err2, user) => {
           if (!err2) {
-            callback(500, {
+            callback(200, {
               message: "User was created successfully.",
             });
           } else {
@@ -94,6 +95,8 @@ handlers._user.post = (requestProperties, callback) => {
     });
   }
 };
+
+// get user
 handlers._user.get = (requestProperties, callback) => {
   const phone =
     typeof requestProperties.queryStringObject.phone === "string" &&
@@ -110,14 +113,81 @@ handlers._user.get = (requestProperties, callback) => {
         callback(200, user);
       } else {
         callback(500, {
-          error: "User not found or an error in server",
+          error: "User not exist or an error in server",
         });
       }
     });
   } else {
-    callback(400, { error: "There was an error in your request body" });
+    callback(400, {
+      error:
+        "There was an error in your request query  (Invalid phone number).",
+    });
   }
 };
-handlers._user.put = () => {};
+//Update User
+handlers._user.put = (requestProperties, callback) => {
+  // check validation
+  const phone =
+    typeof requestProperties.body.phone === "string" &&
+    requestProperties.body.phone.trim().length === 10
+      ? requestProperties.body.phone
+      : false;
+  const firstName =
+    typeof requestProperties.body.firstName === "string" &&
+    requestProperties.body.firstName.trim().length > 0
+      ? requestProperties.body.firstName
+      : false;
+  const lastName =
+    typeof requestProperties.body.lastName === "string" &&
+    requestProperties.body.lastName.trim().length > 0
+      ? requestProperties.body.lastName
+      : false;
+  const password =
+    typeof requestProperties.body.password === "string" &&
+    requestProperties.body.password.trim().length > 4
+      ? requestProperties.body.password
+      : false;
+
+  if (phone) {
+    data.read("users", phone, (err, userJson) => {
+      if (!err && userJson) {
+        const user = jsonParse(userJson);
+        if (firstName || lastName || password) {
+          firstName ? (user.firstName = firstName) : 0;
+          lastName ? (user.lastName = lastName) : 0;
+          password ? (user.password = hash(password)) : 0;
+          data.update("users", phone, user, (err2) => {
+            if (!err2) {
+              callback(200, {
+                message: "User updated successfully",
+              });
+            } else {
+              callback(500, {
+                error: "There was an error in server.",
+              });
+            }
+          });
+        } else {
+          callback(400, {
+            error:
+              "There was an error in phone number in your request. (Update value)",
+          });
+        }
+      } else {
+        callback(500, {
+          error: "User not exist or an error in server",
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      error:
+        "There was an error in phone number in your request. (Invalid phone number)",
+    });
+  }
+};
+
+//Delete User
 handlers._user.delete = () => {};
+
 module.exports = handlers;
