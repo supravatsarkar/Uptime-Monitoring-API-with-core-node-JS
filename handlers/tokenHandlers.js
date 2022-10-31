@@ -77,10 +77,75 @@ handlers._token.post = (requestProperties, callback) => {
 };
 
 // get token
-handlers._token.get = (requestProperties, callback) => {};
+handlers._token.get = (requestProperties, callback) => {
+  const tokenId =
+    typeof requestProperties.queryStringObject.tokenId === "string" &&
+    requestProperties.queryStringObject.tokenId.trim().length === 20
+      ? requestProperties.queryStringObject.tokenId
+      : false;
+  if (tokenId) {
+    data.read("tokens", tokenId, (err, tokenJsonStr) => {
+      if (!err && tokenJsonStr) {
+        const tokenObj = jsonParse(tokenJsonStr);
+        callback(200, tokenObj);
+      } else {
+        callback("400", {
+          error: "Token not exist or Server error.",
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      error: "There was an error in your request query (Invalid token).",
+    });
+  }
+};
 //Update token
 handlers._token.put = (requestProperties, callback) => {
   // check validation
+  const tokenId =
+    typeof requestProperties.body.tokenId === "string" &&
+    requestProperties.body.tokenId.trim().length === 20
+      ? requestProperties.body.tokenId
+      : false;
+  const extend =
+    typeof requestProperties.body.extend === "boolean" &&
+    requestProperties.body.extend === true
+      ? requestProperties.body.extend
+      : false;
+  if (tokenId && extend) {
+    data.read("tokens", tokenId, (err, tokenJsonStr) => {
+      if (!err && tokenJsonStr) {
+        const tokenObj = jsonParse(tokenJsonStr);
+        if (tokenObj.expires > Date.now()) {
+          tokenObj.expires = Date.now() + 60 * 60 * 1000;
+          data.update("tokens", tokenId, tokenObj, (err2) => {
+            if (!err2) {
+              callback(200, {
+                message: "Token updated successfully.",
+              });
+            } else {
+              callback(500, {
+                error: "There was an error in server side.",
+              });
+            }
+          });
+        } else {
+          callback(400, {
+            error: "Token already expire.",
+          });
+        }
+      } else {
+        callback(400, {
+          error: "Token not exist or server error.",
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      error: "There was an error in your request body.",
+    });
+  }
 };
 
 //Delete token
