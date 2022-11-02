@@ -151,6 +151,38 @@ handlers._token.put = (requestProperties, callback) => {
 //Delete token
 handlers._token.delete = (requestProperties, callback) => {
   // check validation
+  const tokenId =
+    typeof requestProperties.queryStringObject.tokenId === "string" &&
+    requestProperties.queryStringObject.tokenId.trim().length === 20
+      ? requestProperties.queryStringObject.tokenId
+      : false;
+
+  if (tokenId) {
+    // checking tokenId
+    data.read("tokens", tokenId, (err, tokenJson) => {
+      if (!err && tokenJson) {
+        data.delete("tokens", tokenId, (err2) => {
+          if (!err2) {
+            callback(200, {
+              message: "Token deleted successfully.",
+            });
+          } else {
+            callback(500, {
+              error: "There was an error in server.",
+            });
+          }
+        });
+      } else {
+        callback(500, {
+          error: "Token not exist or an error in server",
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      error: "There was an error in your request query  (Invalid tokenId).",
+    });
+  }
 };
 
 module.exports = handlers;
