@@ -9,6 +9,7 @@
 // dependencies
 const data = require("../lib/data");
 const { hash, jsonParse } = require("../helper/utilities");
+const { _token } = require("../handlers/tokenHandlers");
 
 // module scaffolding
 const handlers = {};
@@ -100,17 +101,31 @@ handlers._user.get = (requestProperties, callback) => {
     requestProperties.queryStringObject.phone.trim().length === 10
       ? requestProperties.queryStringObject.phone
       : false;
-
+  // checking phone number
   if (phone) {
-    // checking phone number
-    data.read("users", phone, (err, userJson) => {
-      if (!err && userJson) {
-        const user = jsonParse(userJson);
-        delete user.password;
-        callback(200, user);
+    // authentication
+    const token =
+      typeof requestProperties.headersObject.token === "string"
+        ? requestProperties.headersObject.token
+        : false;
+
+    _token.verify(token, phone, (isValidToken) => {
+      if (isValidToken) {
+        // lookup user
+        data.read("users", phone, (err, userJson) => {
+          if (!err && userJson) {
+            const user = jsonParse(userJson);
+            delete user.password;
+            callback(200, user);
+          } else {
+            callback(500, {
+              error: "User not exist or an error in server",
+            });
+          }
+        });
       } else {
-        callback(500, {
-          error: "User not exist or an error in server",
+        callback(403, {
+          error: "Authentication failure!",
         });
       }
     });
@@ -147,34 +162,49 @@ handlers._user.put = (requestProperties, callback) => {
 
   // find user
   if (phone) {
-    data.read("users", phone, (err, userJson) => {
-      if (!err && userJson) {
-        // update user
-        const user = jsonParse(userJson);
-        if (firstName || lastName || password) {
-          firstName ? (user.firstName = firstName) : 0;
-          lastName ? (user.lastName = lastName) : 0;
-          password ? (user.password = hash(password)) : 0;
-          data.update("users", phone, user, (err2) => {
-            if (!err2) {
-              callback(200, {
-                message: "User updated successfully",
+    // authentication
+    const token =
+      typeof requestProperties.headersObject.token === "string"
+        ? requestProperties.headersObject.token
+        : false;
+
+    _token.verify(token, phone, (isValidToken) => {
+      if (isValidToken) {
+        // lookup user
+        data.read("users", phone, (err, userJson) => {
+          if (!err && userJson) {
+            // update user
+            const user = jsonParse(userJson);
+            if (firstName || lastName || password) {
+              firstName ? (user.firstName = firstName) : 0;
+              lastName ? (user.lastName = lastName) : 0;
+              password ? (user.password = hash(password)) : 0;
+              data.update("users", phone, user, (err2) => {
+                if (!err2) {
+                  callback(200, {
+                    message: "User updated successfully",
+                  });
+                } else {
+                  callback(500, {
+                    error: "There was an error in server.",
+                  });
+                }
               });
             } else {
-              callback(500, {
-                error: "There was an error in server.",
+              callback(400, {
+                error:
+                  "There was an error in phone number in your request. (Update value)",
               });
             }
-          });
-        } else {
-          callback(400, {
-            error:
-              "There was an error in phone number in your request. (Update value)",
-          });
-        }
+          } else {
+            callback(500, {
+              error: "User not exist or an error in server",
+            });
+          }
+        });
       } else {
-        callback(500, {
-          error: "User not exist or an error in server",
+        callback(403, {
+          error: "Authentication failure!",
         });
       }
     });
@@ -194,25 +224,39 @@ handlers._user.delete = (requestProperties, callback) => {
     requestProperties.queryStringObject.phone.trim().length === 10
       ? requestProperties.queryStringObject.phone
       : false;
-
+  // checking phone number
   if (phone) {
-    // checking phone number
-    data.read("users", phone, (err, userJson) => {
-      if (!err && userJson) {
-        data.delete("users", phone, (err) => {
-          if (!err) {
-            callback(200, {
-              message: "User deleted successfully.",
+    // authentication
+    const token =
+      typeof requestProperties.headersObject.token === "string"
+        ? requestProperties.headersObject.token
+        : false;
+
+    _token.verify(token, phone, (isValidToken) => {
+      if (isValidToken) {
+        // lookup user
+        data.read("users", phone, (err, userJson) => {
+          if (!err && userJson) {
+            data.delete("users", phone, (err) => {
+              if (!err) {
+                callback(200, {
+                  message: "User deleted successfully.",
+                });
+              } else {
+                callback(500, {
+                  error: "There was an error in server.",
+                });
+              }
             });
           } else {
             callback(500, {
-              error: "There was an error in server.",
+              error: "User not exist or an error in server",
             });
           }
         });
       } else {
-        callback(500, {
-          error: "User not exist or an error in server",
+        callback(403, {
+          error: "Authentication failure!",
         });
       }
     });
