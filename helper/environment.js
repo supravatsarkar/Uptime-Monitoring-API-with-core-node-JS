@@ -12,12 +12,14 @@ environment.dev = {
   port: 5000,
   envName: "development",
   secretKey: "dellfpff",
+  maxChecks: 5,
 };
 
 environment.production = {
   port: 5500,
   envName: "production",
   secretKey: "phsrpch",
+  maxChecks: 5,
 };
 
 const currentEnvironment =
