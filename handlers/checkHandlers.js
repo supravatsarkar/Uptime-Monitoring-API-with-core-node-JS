@@ -143,12 +143,224 @@ handlers._check.post = (requestProperties, callback) => {
   }
 };
 
-// get user
-handlers._check.get = (requestProperties, callback) => {};
-//Update User
-handlers._check.put = (requestProperties, callback) => {};
+// get check
+handlers._check.get = (requestProperties, callback) => {
+  const checkId =
+    typeof requestProperties.queryStringObject.checkId === "string" &&
+    requestProperties.queryStringObject.checkId.trim().length === 20
+      ? requestProperties.queryStringObject.checkId
+      : false;
 
-//Delete User
-handlers._check.delete = (requestProperties, callback) => {};
+  if (checkId) {
+    data.read("checks", checkId, (err, checkDataStr) => {
+      if (!err && checkDataStr) {
+        const checkData = jsonParse(checkDataStr);
+        const token =
+          typeof requestProperties.headersObject.token === "string"
+            ? requestProperties.headersObject.token
+            : false;
+        _token.verify(token, checkData.userPhone, (isValidToken) => {
+          if (isValidToken) {
+            callback(200, checkData);
+          } else {
+            callback(403, {
+              error: "Authentication failure!",
+            });
+          }
+        });
+      } else {
+        callback(500, {
+          error: "Check not exist",
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      error: "There was an error in your request body",
+    });
+  }
+};
+//Update check
+handlers._check.put = (requestProperties, callback) => {
+  const checkId =
+    typeof requestProperties.body.checkId === "string" &&
+    requestProperties.body.checkId.trim().length === 20
+      ? requestProperties.body.checkId
+      : false;
+  const protocol =
+    typeof requestProperties.body.protocol === "string" &&
+    ["http", "https"].indexOf(requestProperties.body.protocol) > -1
+      ? requestProperties.body.protocol
+      : false;
+  const method =
+    typeof requestProperties.body.method === "string" &&
+    ["GET", "POST", "PUT", "DELETE"].indexOf(requestProperties.body.method) > -1
+      ? requestProperties.body.method
+      : false;
+  const url =
+    typeof requestProperties.body.url === "string" &&
+    requestProperties.body.url.trim().length > 0
+      ? requestProperties.body.url
+      : false;
+  const successCodes =
+    typeof requestProperties.body.successCodes === "object" &&
+    requestProperties.body.successCodes instanceof Array
+      ? requestProperties.body.successCodes
+      : false;
+  const timeoutSeconds =
+    typeof requestProperties.body.timeoutSeconds === "number" &&
+    requestProperties.body.timeoutSeconds % 1 === 0 &&
+    requestProperties.body.timeoutSeconds >= 1 &&
+    requestProperties.body.timeoutSeconds <= 5
+      ? requestProperties.body.timeoutSeconds
+      : false;
+
+  const token =
+    typeof requestProperties.headersObject.token === "string"
+      ? requestProperties.headersObject.token
+      : false;
+
+  if (checkId) {
+    data.read("checks", checkId, (err, checkDataStr) => {
+      if (!err && checkDataStr) {
+        const checkData = jsonParse(checkDataStr);
+        if (protocol || url || method || successCodes || timeoutSeconds) {
+          _token.verify(token, checkData.userPhone, (isValidToken) => {
+            if (isValidToken) {
+              if (protocol) {
+                checkData.protocol = protocol;
+              }
+              if (url) {
+                checkData.url = url;
+              }
+              if (method) {
+                checkData.method = method;
+              }
+              if (successCodes) {
+                checkData.successCodes = successCodes;
+              }
+              if (protocol) {
+                checkData.timeoutSeconds = timeoutSeconds;
+              }
+              data.update("checks", checkData.checkId, checkData, (err) => {
+                if (!err) {
+                  callback(200, checkData);
+                } else {
+                  callback(500, {
+                    error: "There was an error in server side",
+                  });
+                }
+              });
+            } else {
+              callback(403, {
+                error: "Authentication failure",
+              });
+            }
+          });
+        } else {
+          callback(400, {
+            error: "At least one key need for update ",
+          });
+        }
+      } else {
+        callback(500, {
+          error: "Check not exist or server side error",
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      error: "Please enter valid checkId with 20 char",
+    });
+  }
+};
+
+//Delete check
+handlers._check.delete = (requestProperties, callback) => {
+  const checkId =
+    typeof requestProperties.queryStringObject.checkId === "string" &&
+    requestProperties.queryStringObject.checkId.trim().length === 20
+      ? requestProperties.queryStringObject.checkId
+      : false;
+
+  if (checkId) {
+    data.read("checks", checkId, (err, checkDataStr) => {
+      if (!err && checkDataStr) {
+        const checkData = jsonParse(checkDataStr);
+        const token =
+          typeof requestProperties.headersObject.token === "string"
+            ? requestProperties.headersObject.token
+            : false;
+        _token.verify(token, checkData.userPhone, (isValidToken) => {
+          if (isValidToken) {
+            data.delete("checks", checkId, (err2) => {
+              if (!err2) {
+                data.read("users", checkData.userPhone, (err3, userDataStr) => {
+                  if (!err3 && userDataStr) {
+                    const userObj = jsonParse(userDataStr);
+                    const userChecks =
+                      typeof userObj.checks === "object" &&
+                      userObj.checks instanceof Array
+                        ? userObj.checks
+                        : [];
+                    console.log("userChecks=>", userChecks);
+                    const checkPosition = userChecks.indexOf(checkId);
+                    if (checkPosition > -1) {
+                      userChecks.splice(checkPosition, 1);
+                      userObj.checks = userChecks;
+                      console.log("userObj.checks=>", userObj.checks);
+                      data.update(
+                        "users",
+                        checkData.userPhone,
+                        userObj,
+                        (err4) => {
+                          if (!err4) {
+                            callback(200, {
+                              message: "Check delete successful",
+                            });
+                          } else {
+                            callback(500, {
+                              error: "There was an error in server side",
+                            });
+                          }
+                        }
+                      );
+                    } else {
+                      callback(500, {
+                        error:
+                          "The check id which you try to delete is not exist in user check list",
+                      });
+                    }
+                  } else {
+                    callback(500, {
+                      error:
+                        "User not found Or There was an error in server side to",
+                    });
+                  }
+                });
+              } else {
+                callback(500, {
+                  error: "There was an error in server side",
+                });
+              }
+            });
+          } else {
+            callback(403, {
+              error: "Authentication failure!",
+            });
+          }
+        });
+      } else {
+        callback(500, {
+          error: "Check not exist",
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      error: "There was an error in your request body",
+    });
+  }
+};
 
 module.exports = handlers;
