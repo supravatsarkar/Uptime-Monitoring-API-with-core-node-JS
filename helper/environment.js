@@ -13,6 +13,11 @@ environment.dev = {
   envName: "development",
   secretKey: "dellfpff",
   maxChecks: 5,
+  twilioCreds: {
+    TWILIO_ACCOUNT_SID: "AC4352c79f443bd1b3d60c81693f5b8610",
+    AUTH_TOKEN: "ba5a63683a1c37cc810209dc00079638",
+    From: "+19498285845",
+  },
 };
 
 environment.production = {
@@ -20,6 +25,11 @@ environment.production = {
   envName: "production",
   secretKey: "phsrpch",
   maxChecks: 5,
+  twilioCreds: {
+    TWILIO_ACCOUNT_SID: "AC4352c79f443bd1b3d60c81693f5b8610",
+    AUTH_TOKEN: "ba5a63683a1c37cc810209dc00079638",
+    From: "+19498285845",
+  },
 };
 
 const currentEnvironment =

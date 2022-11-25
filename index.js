@@ -10,26 +10,18 @@ const http = require("http");
 const { handleReqRes } = require("./helper/handleReqRes");
 const environment = require("./helper/environment");
 const data = require("./lib/data");
+const { sendTwilioSms } = require("./helper/notification");
+
+// sendTwilioSms("9733810712", " ", (err) => {
+//   if (!err) {
+//     console.log("Message sent success");
+//   } else {
+//     console.log("Message sent Error:", err);
+//   }
+// });
 
 // app object - module scaffolding
 const app = {};
-
-// this is for testing fs database;
-
-// data.create("test", "newFile", { name: "supravat", age: 29 }, (err) => {
-//   if (err) {
-//     console.log(err);
-//   }
-// });
-// data.read("test", "newFile", (err, data) => {
-//   console.log(err, data);
-// });
-// data.update("test", "newFile", { name: "Barsha", age: 18 }, (err) => {
-//   console.log(err);
-// });
-// data.delete("test", "newFile", (err) => {
-//   console.log(err);
-// });
 
 // create server
 
