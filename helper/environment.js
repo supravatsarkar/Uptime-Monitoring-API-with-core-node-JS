@@ -5,6 +5,8 @@
  * Date : 25/09/2022
  */
 
+// dependencies
+const creds = require("../creds");
 // module scaffolding
 const environment = {};
 
@@ -14,8 +16,8 @@ environment.dev = {
   secretKey: "dellfpff",
   maxChecks: 5,
   twilioCreds: {
-    TWILIO_ACCOUNT_SID: "AC4352c79f443bd1b3d60c81693f5b8610",
-    AUTH_TOKEN: "ba5a63683a1c37cc810209dc00079638",
+    TWILIO_ACCOUNT_SID: creds.TWILIO_ACCOUNT_SID,
+    AUTH_TOKEN: creds.AUTH_TOKEN,
     From: "+19498285845",
   },
 };
@@ -26,8 +28,8 @@ environment.production = {
   secretKey: "phsrpch",
   maxChecks: 5,
   twilioCreds: {
-    TWILIO_ACCOUNT_SID: "AC4352c79f443bd1b3d60c81693f5b8610",
-    AUTH_TOKEN: "ba5a63683a1c37cc810209dc00079638",
+    TWILIO_ACCOUNT_SID: creds.TWILIO_ACCOUNT_SID,
+    AUTH_TOKEN: creds.AUTH_TOKEN,
     From: "+19498285845",
   },
 };

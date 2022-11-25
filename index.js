@@ -12,7 +12,7 @@ const environment = require("./helper/environment");
 const data = require("./lib/data");
 const { sendTwilioSms } = require("./helper/notification");
 
-// sendTwilioSms("9733810712", " ", (err) => {
+// sendTwilioSms("9733810712", "Hi this test", (err) => {
 //   if (!err) {
 //     console.log("Message sent success");
 //   } else {
