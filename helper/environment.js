@@ -15,6 +15,7 @@ environment.dev = {
   envName: "development",
   secretKey: "dellfpff",
   maxChecks: 5,
+  workerLoopTime: 10,
   twilioCreds: {
     TWILIO_ACCOUNT_SID: creds.TWILIO_ACCOUNT_SID,
     AUTH_TOKEN: creds.AUTH_TOKEN,
@@ -27,6 +28,7 @@ environment.production = {
   envName: "production",
   secretKey: "phsrpch",
   maxChecks: 5,
+  workerLoopTime: 60,
   twilioCreds: {
     TWILIO_ACCOUNT_SID: creds.TWILIO_ACCOUNT_SID,
     AUTH_TOKEN: creds.AUTH_TOKEN,
